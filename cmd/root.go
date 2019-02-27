@@ -17,7 +17,7 @@ var cfgFile string
 var RootCmd = &cobra.Command{
 	Use:   "ztdns",
 	Short: "Zerotier DNS Server",
-	Long: `ztDNS is a dedicated DNS server for ZeroTier networks.
+	Long: `[chin_fork] ztDNS is a dedicated DNS server for ZeroTier networks.
 This application will serve DNS requests for the members of a ZeroTier
 network for both A (IPv4) and AAAA (IPv6) requests`,
 }

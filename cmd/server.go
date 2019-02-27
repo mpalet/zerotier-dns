@@ -20,7 +20,7 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Run ztDNS server",
 	Long: `Server (ztdns server) will start the DNS server.append
-	
+
 	Example: ztdns server`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// Check config and bail if anything important is missing.
@@ -43,8 +43,15 @@ var serverCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		var offline_nodes bool
+
+		if viper.GetBool("show_offline_nodes"){
+			offline_nodes = true
+			log.Debug("Creating records for offline nodes, too.")
+		}
+
 		// Update the DNSDatabase
-		lastUpdate := updateDNS()
+		lastUpdate := updateDNS(offline_nodes)
 		req := make(chan string)
 		// Start the DNS server
 		go dnssrv.Start(viper.GetString("interface"), viper.GetInt("port"), viper.GetString("suffix"), req)
@@ -60,7 +67,7 @@ var serverCmd = &cobra.Command{
 			// If the database hasn't been updated in the last "refresh" minutes, update it.
 			if time.Since(lastUpdate) > time.Duration(refresh)*time.Minute {
 				log.Infof("DNSDatabase is stale. Refreshing.")
-				lastUpdate = updateDNS()
+				lastUpdate = updateDNS(offline_nodes)
 			}
 		}
 	},
@@ -72,7 +79,7 @@ func init() {
 	viper.BindPFlag("interface", serverCmd.PersistentFlags().Lookup("interface"))
 }
 
-func updateDNS() time.Time {
+func updateDNS(offline_nodes bool) time.Time {
 	// Get config info
 	API := viper.GetString("ZT.API")
 	URL := viper.GetString("ZT.URL")
@@ -96,7 +103,7 @@ func updateDNS() time.Time {
 
 		for _, n := range *lst {
 			// For all online members
-			if n.Online {
+			if (offline_nodes || n.Online) {
 				// Clear current DNS records
 				record := n.Name + "." + domain + "." + suffix + "."
 				dnssrv.DNSDatabase[record] = dnssrv.Records{}

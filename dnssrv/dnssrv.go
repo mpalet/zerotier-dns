@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/miekg/dns"
@@ -110,7 +111,7 @@ func handleDNSRequest(w dns.ResponseWriter, r *dns.Msg) {
 func parseQuery(m *dns.Msg) {
 	for _, q := range m.Question {
 		queryChan <- q.Name
-		if rec, ok := DNSDatabase[q.Name]; ok {
+		if rec, ok := DNSDatabase[strings.ToLower(q.Name)]; ok {
 			switch q.Qtype {
 			case dns.TypeA:
 				for _, ip := range shuffle(rec.A) {

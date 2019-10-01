@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"regexp"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -106,8 +107,14 @@ func updateDNS() time.Time {
 		for _, n := range *lst {
 			// For all online members
 			if n.Online {
+				// Sanitize name
+				name := strings.ToLower(n.Name)
+				name = strings.ReplaceAll(name, " ", "-")
+				re := regexp.MustCompile("[^a-zA-Z0-9-]+")
+				name = re.ReplaceAllString(name, "")
+				record := name + "." + domain + "." + suffix + "."
+
 				// Clear current DNS records
-				record := n.Name + "." + domain + "." + suffix + "."
 				dnssrv.DNSDatabase[record] = dnssrv.Records{}
 				ip6 := []net.IP{}
 				ip4 := []net.IP{}

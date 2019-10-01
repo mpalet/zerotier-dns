@@ -20,7 +20,7 @@
 
 package main
 
-import "github.com/hatemosphere/ztdns/cmd"
+import "github.com/mje-nz/ztdns/cmd"
 
 func main() {
 	cmd.Execute()

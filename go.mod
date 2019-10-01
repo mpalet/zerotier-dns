@@ -1,4 +1,4 @@
-module github.com/hatemosphere/ztdns
+module github.com/mje-nz/ztdns
 
 go 1.12
 

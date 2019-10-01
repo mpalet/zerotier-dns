@@ -12,8 +12,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/hatemosphere/ztdns/dnssrv"
-	"github.com/hatemosphere/ztdns/ztapi"
+	"github.com/mje-nz/ztdns/dnssrv"
+	"github.com/mje-nz/ztdns/ztapi"
 )
 
 // serverCmd represents the server command

@@ -1,5 +1,4 @@
 // Copyright © 2017 uxbh
-// This file is part of github.com/hatemosphere/ztdns.
 
 package cmd
 
@@ -14,7 +13,7 @@ import (
 var listinterfacesCmd = &cobra.Command{
 	Use:   "listinterfaces",
 	Short: "List network interfaces",
-	Long: `List Interfaces (ztdns listinterfaces) lists the available network interfaces 
+	Long: `List Interfaces (ztdns listinterfaces) lists the available network interfaces
 to start the server on.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get a list of interfaces from net

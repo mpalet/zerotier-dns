@@ -91,6 +91,7 @@ func updateDNS() time.Time {
 	apiKey := viper.GetString("api-key")
 	apiUrl := viper.GetString("api-url")
 	rootDomain := viper.GetString("domain")
+	includeOffline := viper.GetString("include-offline")
 
 	rrDNSPatterns := make(map[string]*regexp.Regexp)
 	rrDNSRecords := make(map[string][]dnssrv.Records)
@@ -125,8 +126,7 @@ func updateDNS() time.Time {
 		log.Debugf("Got %d members", len(*lst))
 
 		for _, n := range *lst {
-			// For all online members
-			if n.Online {
+			if includeOffline || n.Online {
 				// Sanitize member name
 				name := strings.ToLower(n.Name)
 				name = strings.ReplaceAll(name, " ", "-")

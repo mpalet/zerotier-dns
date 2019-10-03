@@ -93,7 +93,7 @@ func updateDNS() time.Time {
 	apiKey := viper.GetString("api-key")
 	apiUrl := viper.GetString("api-url")
 	rootDomain := viper.GetString("domain")
-	includeOffline := viper.GetString("include-offline")
+	includeOffline := viper.GetBool("include-offline")
 
 	rrDNSPatterns := make(map[string]*regexp.Regexp)
 	rrDNSRecords := make(map[string][]dnssrv.Records)

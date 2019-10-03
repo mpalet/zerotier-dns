@@ -1,12 +1,14 @@
-FROM golang:1.13 AS build-env
+ARG GO_VERSION=1.13
+FROM golang:${GO_VERSION} AS builder
 
 WORKDIR /go/src/github.com/mje-nz/ztdns
-# Add source
-COPY . .
 
-# Install dependencies
-ENV GO111MODULE=on
+# Fetch and cache dependencies
+COPY ./go.mod ./go.sum ./
+RUN go mod download
+
 # Build static binary
+COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go install
 
 
@@ -17,7 +19,7 @@ RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 # Copy binary
-COPY --from=build-env /go/bin/ztdns .
+COPY --from=builder /go/bin/ztdns .
 
 ENTRYPOINT ["./ztdns"]
 CMD ["server"]

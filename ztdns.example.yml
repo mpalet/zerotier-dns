@@ -15,6 +15,9 @@ domain: "zt"
 # How often to poll the ZeroTier controller in minutes.
 refresh: 30
 
+# Whether to include offline members
+include-offline: true
+
 # Enable debug messages.
 debug: false
 

@@ -20,27 +20,36 @@ import (
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Run ztDNS server",
-	Long: `Server (ztdns server) will start the DNS server.append
+	Long: `Server (ztdns server) will start the DNS server.
 
 	Example: ztdns server`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// Check config and bail if anything important is missing.
 		if viper.GetBool("debug") {
 			log.SetLevel(log.DebugLevel)
-			log.Debug("Setting Debug Mode")
 		}
-		if viper.GetString("ZT.API") == "" {
-			return fmt.Errorf("no API key provided")
+		log.Debug("debug: ", viper.GetBool("debug"))
+		log.Debugf("interface: %s", viper.GetString("interface"))
+		log.Debug("port: ", viper.GetInt("port"))
+		log.Debugf("domain: %q", viper.GetString("domain"))
+		log.Debug("refresh: ", viper.GetInt("refresh"))
+		log.Debugf("api-key: %q", viper.GetString("api-key"))
+		log.Debugf("api-url: %q", viper.GetString("api-url"))
+		log.Debugf("network: %q", viper.GetString("network"))
+		log.Debugf("networks: %#v", viper.GetStringMapString("networks"))
+		log.Debugf("round-robin: %#v", viper.GetStringMapString("round-robin"))
+
+		if viper.GetString("api-key") == "" {
+			return fmt.Errorf("No API key provided")
 		}
-		if len(viper.GetStringMapString("Networks")) == 0 {
-			return fmt.Errorf("no Domain / Network ID pairs Provided")
+
+		if viper.GetString("network") == "" && !viper.IsSet("networks") {
+			return fmt.Errorf("No networks configured (specify network or networks)")
 		}
-		if viper.GetString("ZT.URL") == "" {
-			return fmt.Errorf("no URL provided. Run ztdns mkconfig first")
+		if viper.GetString("network") != "" && viper.IsSet("networks") {
+			return fmt.Errorf("Conflicting network configuration (specify one of network or networks)")
 		}
-		if viper.GetString("suffix") == "" {
-			return fmt.Errorf("no DNS Suffix provided. Run ztdns mkconfig first")
-		}
+
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -48,12 +57,9 @@ var serverCmd = &cobra.Command{
 		lastUpdate := updateDNS()
 		req := make(chan string)
 		// Start the DNS server
-		go dnssrv.Start(viper.GetString("interface"), viper.GetInt("port"), viper.GetString("suffix"), req)
+		go dnssrv.Start(viper.GetString("interface"), viper.GetInt("port"), viper.GetString("domain"), req)
 
-		refresh := viper.GetInt("DbRefresh")
-		if refresh == 0 {
-			refresh = 30
-		}
+		refresh := viper.GetInt("refresh")
 		for {
 			// Block until a new request comes in
 			n := <-req
@@ -69,49 +75,64 @@ var serverCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(serverCmd)
-	serverCmd.PersistentFlags().String("interface", "", "interface to listen on")
-	viper.BindPFlag("interface", serverCmd.PersistentFlags().Lookup("interface"))
+	serverCmd.Flags().String("interface", "zt0", "network interface to bind to")
+	serverCmd.Flags().Int("port", 53, "port to listen on")
+	serverCmd.Flags().String("domain", "zt", "domain to serve names under")
+	serverCmd.Flags().Int("refresh", 30, "how often to poll the ZeroTier controller in minutes")
+	serverCmd.Flags().String("api-key", "", "ZeroTier API key")
+	serverCmd.Flags().String("api-url", "https://my.zerotier.com/api", "ZeroTier API URL")
+	serverCmd.Flags().String("network", "", "ZeroTier Network ID")
+	viper.BindPFlags(serverCmd.Flags())
 }
 
+// TODO: refactor
 func updateDNS() time.Time {
 	// Get config info
-	API := viper.GetString("ZT.API")
-	URL := viper.GetString("ZT.URL")
-	suffix := viper.GetString("suffix")
+	apiKey := viper.GetString("api-key")
+	apiUrl := viper.GetString("api-url")
+	rootDomain := viper.GetString("domain")
 
 	rrDNSPatterns := make(map[string]*regexp.Regexp)
 	rrDNSRecords := make(map[string][]dnssrv.Records)
 
-	for re, host := range viper.GetStringMapString("RoundRobin") {
+	for re, host := range viper.GetStringMapString("round-robin") {
 		rrDNSPatterns[host] = regexp.MustCompile(re)
 		log.Debugf("Creating match '%s' for %s host", re, host)
 	}
 
+	networks := viper.GetStringMapString("networks")
+	if len(networks) == 0 {
+		networks = map[string]string{"": viper.GetString("network")}
+	}
+
 	// Get all configured networks:
-	for domain, id := range viper.GetStringMapString("Networks") {
-		// Get ZeroTier Network info
-		ztnetwork, err := ztapi.GetNetworkInfo(API, URL, id)
-		if err != nil {
-			log.Fatalf("Unable to update DNS entries: %s", err.Error())
+	for domain, networkID := range networks {
+		suffix := "." + rootDomain + "."
+		if domain != "" {
+			suffix = "." + domain + suffix
 		}
 
-		// Get list of members in network
-		log.Infof("Getting Members of Network: %s (%s)", ztnetwork.Config.Name, domain)
-		lst, err := ztapi.GetMemberList(API, URL, ztnetwork.ID)
+		ztnetwork, err := ztapi.GetNetworkInfo(apiKey, apiUrl, networkID)
 		if err != nil {
-			log.Fatalf("Unable to update DNS entries: %s", err.Error())
+			log.Fatalf("Unable to get network info: %s", err.Error())
 		}
-		log.Infof("Got %d members", len(*lst))
+
+		log.Infof("Getting members of network: %s (%s)", ztnetwork.Config.Name, suffix)
+		lst, err := ztapi.GetMemberList(apiKey, apiUrl, ztnetwork.ID)
+		if err != nil {
+			log.Fatalf("Unable to get member list: %s", err.Error())
+		}
+		log.Debugf("Got %d members", len(*lst))
 
 		for _, n := range *lst {
 			// For all online members
 			if n.Online {
-				// Sanitize name
+				// Sanitize member name
 				name := strings.ToLower(n.Name)
 				name = strings.ReplaceAll(name, " ", "-")
 				re := regexp.MustCompile("[^a-zA-Z0-9-]+")
 				name = re.ReplaceAllString(name, "")
-				record := name + "." + domain + "." + suffix + "."
+				record := name + suffix
 
 				// Clear current DNS records
 				dnssrv.DNSDatabase[record] = dnssrv.Records{}
@@ -144,7 +165,6 @@ func updateDNS() time.Time {
 				for host, re := range rrDNSPatterns {
 					log.Debugf("Checking matches for %s host", host)
 					if match := re.FindStringSubmatch(n.Name); match != nil {
-						// prefix := fmt.Sprintf(host, iface(match[1:]))
 						rrRecord := host + "." + domain + "." + suffix + "."
 
 						log.Infof("Adding ips to RR record %-15s IPv4: %-15s IPv6: %s, from host %s", rrRecord, ip4, ip6, n.Name)
@@ -168,13 +188,4 @@ func updateDNS() time.Time {
 
 	// Return the current update time
 	return time.Now()
-}
-
-// Convert slice of string to interface for fmt
-func iface(list []string) []interface{} {
-	vals := make([]interface{}, len(list))
-	for i, v := range list {
-		vals[i] = v
-	}
-	return vals
 }

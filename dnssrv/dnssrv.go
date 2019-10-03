@@ -29,7 +29,7 @@ var DNSDatabase = map[string]Records{}
 var queryChan chan string
 
 // Start brings up a DNS server for the specified suffix on a given port.
-func Start(iface string, port int, suffix string, req chan string) error {
+func Start(iface string, port int, suffix string, req chan string) {
 	queryChan = req
 
 	if port == 0 {
@@ -58,12 +58,16 @@ func Start(iface string, port int, suffix string, req chan string) error {
 			log.Printf("Starting server for %s on %s", suffix, server.Addr)
 			err := server.ListenAndServe()
 			if err != nil {
-				log.Fatalf("failed to start DNS server: %s", err.Error())
+				log.Fatalf("Failed to start DNS server: %s", err.Error())
 			}
-			defer server.Shutdown()
+			defer func () {
+				err := server.Shutdown()
+				if err != nil {
+					log.Fatalf("Failed to stop DNS server: %s", err.Error())
+				}
+			}()
 		}(suffix, addr, port)
 	}
-	return nil
 }
 
 func getIfaceAddrs(iface string) []net.IP {
@@ -103,7 +107,9 @@ func handleDNSRequest(w dns.ResponseWriter, r *dns.Msg) {
 		parseQuery(m)
 	}
 
-	w.WriteMsg(m)
+	if err := w.WriteMsg(m); err != nil {
+		log.Errorf("Failed to send response: %s", err.Error())
+	}
 }
 
 // parseQuery reads and creates an answer to a DNS query.
@@ -133,15 +139,15 @@ func parseQuery(m *dns.Msg) {
 
 // shuffle ip addresses for Round Robin dns
 func shuffle(ips []net.IP) []net.IP {
-	ipsLenght := len(ips)
+	ipsLength := len(ips)
 
-	if ipsLenght < 2 {
+	if ipsLength < 2 {
 		return ips
 	}
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	ret := make([]net.IP, ipsLenght)
-	perm := r.Perm(ipsLenght)
+	ret := make([]net.IP, ipsLength)
+	perm := r.Perm(ipsLength)
 
 	for i, randIndex := range perm {
 		ret[i] = ips[randIndex]

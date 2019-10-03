@@ -1,10 +1,12 @@
 // Copyright © 2017 uxbh
 
+// Package cmd implments the ztdns command-line interface.
 package cmd
 
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -12,7 +14,6 @@ import (
 
 var cfgFile string
 
-// RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "ztdns",
 	Short: "Zerotier DNS Server",
@@ -21,8 +22,6 @@ This application will serve DNS requests for the members of a ZeroTier
 network for both A (IPv4) and AAAA (IPv6) requests`,
 }
 
-// Execute adds all child commands to the root command sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -32,28 +31,28 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
 	RootCmd.PersistentFlags().Bool("debug", false, "enable debug messages")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ztdns.yml)")
 	viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug"))
-
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ztdns.toml)")
 
 }
 
-// initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" { // enable ability to specify config file via flag
+	if cfgFile != "" {
+		// Use specified config file
 		viper.SetConfigFile(cfgFile)
 	} else {
-		viper.SetConfigName(".ztdns") // name of config file (without extension)
-		viper.AddConfigPath(".")      // adding current directory as first search path
-		viper.AddConfigPath("$HOME")  // adding home directory as second search path
+		// Find config file in current directory or $HOME
+		viper.SetConfigName("ztdns")
+		viper.AddConfigPath(".")
+		viper.AddConfigPath("$HOME")
 	}
 
+	// Enable setting config values with ZTDNS_KEY environment variables
 	viper.SetEnvPrefix("ztdns")
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
-	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Println("Can't read config:", err)
 		os.Exit(1)

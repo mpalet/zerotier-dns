@@ -17,10 +17,6 @@ type apiTime struct {
 
 func (t *apiTime) UnmarshalJSON(b []byte) error {
 	l := len(b)
-	// if string(b) == "0" {
-	// 	t.time = time.Time{}
-	// 	return nil
-	// }
 	if l < 3 {
 		n, err := strconv.ParseInt(string(b), 10, 32)
 		if err != nil {
@@ -52,8 +48,7 @@ func getJSON(url, APIToken string, target interface{}) error {
 	req.Header.Set("Authorization", "bearer "+APIToken)
 	r, err := c.Do(req)
 	if err != nil {
-		fmt.Errorf("API Error: %q", err)
-		return err
+		return fmt.Errorf("API Error: %s", err.Error())
 	}
 	if r.StatusCode != 200 {
 		return fmt.Errorf("API returned error: %s", r.Status)

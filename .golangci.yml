@@ -1,0 +1,4 @@
+linters-settings:
+  errcheck:
+    # fmt is default
+    ignore: fmt:.*,github.com/spf13/viper:BindPFlag

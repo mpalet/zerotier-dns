@@ -1,4 +1,5 @@
 # ZerotierDNS
+![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/mjenz/ztdns)
 
 ztDNS is a dedicated DNS server for a ZeroTier virtual network.
 

@@ -75,6 +75,10 @@ var serverCmd = &cobra.Command{
 }
 
 func init() {
+	log.SetFormatter(&log.TextFormatter{
+		TimestampFormat: "2006-01-02 15:04:05 -07:00",
+	})
+
 	RootCmd.AddCommand(serverCmd)
 	serverCmd.Flags().String("interface", "zt0", "network interface to bind to")
 	serverCmd.Flags().Int("port", 53, "port to listen on")

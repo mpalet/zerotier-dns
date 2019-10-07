@@ -8,10 +8,20 @@
 # and the Docker version on Docker Hub is super outdated.  Oh well, this is
 # faster anyway.
 
-name: Build and publish Docker image
+name: Run checks, build and publish Docker image
 on: [push]
 jobs:
-  build:
+  Check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/setup-python@master
+    - name: Install and run pre-commit
+      run: |
+        pip install pre-commit
+        pre-commit run -a -v
+  Build:
+    needs: check
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master

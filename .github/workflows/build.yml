@@ -50,6 +50,9 @@ jobs:
           -t mjenz/ztdns:latest \
           .
         docker push mjenz/ztdns:latest
-
-# TODO: Update Docker Hub readme
-# TODO: Make this dependent on checks passing
+    - name: Update Docker Hub description
+      uses: peter-evans/dockerhub-description@v2.1.0
+      env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKERHUB_REPOSITORY: mjenz/ztdns

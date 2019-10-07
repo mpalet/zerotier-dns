@@ -1,0 +1,45 @@
+# See:
+#   https://github.com/elgohr/Publish-Docker-Github-Action
+#   https://andrewlock.net/caching-docker-layers-on-serverless-build-hosts-with-multi-stage-builds---target,-and---cache-from/
+#   https://docs.docker.com/docker-hub/access-tokens/
+
+# I would use a Docker Hub automated build instead of this, but I need BuildKit
+# (https://github.com/moby/moby/issues/35699)
+# and the Docker version on Docker Hub is super outdated.  Oh well, this is
+# faster anyway.
+
+name: Build and publish Docker image
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Install latest Docker
+      run: |
+        curl -fsSL https://get.docker.com | sudo sh
+    - name: Log in to registry
+      env:
+        USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: |
+        echo ${PASSWORD} | docker login -u ${USERNAME} --password-stdin
+    - name: Fetch dependencies
+      run: |
+        docker pull mjenz/ztdns:builder || true
+        DOCKER_BUILDKIT=1 docker build \
+          --target builder \
+          --cache-from mjenz/ztdns:builder \
+          -t mjenz/ztdns:builder \
+          .
+        docker push mjenz/ztdns:builder
+    - name: Build and push image
+      run: |
+        DOCKER_BUILDKIT=1 docker build \
+          --cache-from mjenz/ztdns:builder \
+          -t mjenz/ztdns:latest \
+          .
+        docker push mjenz/ztdns:latest
+
+# TODO: Update Docker Hub readme
+# TODO: Make this dependent on checks passing

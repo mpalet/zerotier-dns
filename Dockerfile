@@ -9,9 +9,13 @@ WORKDIR /go/src/github.com/mje-nz/ztdns
 COPY ./go.mod ./go.sum ./
 RUN go mod download
 
-# Build static binary
+# Build static binary and allow it to bind to ports <1000
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go install -ldflags="-w -s"
+RUN CGO_ENABLED=0 GOOS=linux go install -ldflags="-w -s" && \
+	# NB Only works on BuildKit
+	# https://github.com/moby/moby/issues/35699
+	setcap cap_net_bind_service=+ep /go/bin/ztdns
+
 
 
 FROM scratch

@@ -1,5 +1,4 @@
 # ZerotierDNS
-[![Docker Cloud build status](https://img.shields.io/docker/cloud/build/mjenz/ztdns)](https://cloud.docker.com/repository/docker/mjenz/ztdns/)
 [![MicroBadger size](https://img.shields.io/microbadger/image-size/mjenz/ztdns)](https://microbadger.com/images/mjenz/ztdns)
 [![Pre-commit workflow status](https://github.com/mje-nz/ztdns/workflows/Check/badge.svg)](https://github.com/mje-nz/ztdns)
 

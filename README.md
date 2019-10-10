@@ -7,8 +7,10 @@
 </h4>
 
 <p align="center">
-    <img src="https://github.com/mje-nz/ztdns/workflows/Check%2C%20build/badge.svg"
+  <a href="https://github.com/mje-nz/ztdns">
+    <img src="https://github.com/mje-nz/ztdns/workflows/Check/badge.svg"
          alt="Github Actions">
+  </a>
 </p>
 
 This is a fork of [uxbh/ztdns](https://github.com/uxbh/ztdns).
@@ -31,14 +33,35 @@ To start the server using the Docker image:
 
 ```bash
 docker run --rm \
+  -p 53:53/udp \
   --volume $(pwd)/ztdns.yml:/app/ztdns.yml \
   mjenz/ztdns server --api-key API_KEY --network NETWORK_ID
 ```
 
-where `API_KEY` is a ZeroTier API Access Token and `NETWORK_ID` is a ZeroTier network ID.
-If your ZeroTier network interface is not called `zt0`, then you should add `--interface=<your ZeroTier interface` (or `--interface=` to operate on all interfaces).
-It is recommended to use a configuration file instead of these command-line arguments (see "Configuration" section below).
+where `API_KEY` is a ZeroTier API token and `NETWORK_ID` is a ZeroTier network ID.
+If your ZeroTier network interface is not called `zt0`, then you should add `--interface=<your ZeroTier interface>` (or `--interface=` to listen on all interfaces).
+It is recommended to use a configuration file instead of these command-line arguments (see ["Configuration"](#configuration) section below).
 
+Once the server is running you will be able to resolve ZeroTier network member names by querying it directly:
+
+```bash
+dig @<server address> <member name>.<ztdns domain>
+
+;; QUESTION SECTION:
+;matthews-mbp.zt.   IN  A
+
+;; ANSWER SECTION:
+matthews-mbp.zt.  3600  IN  A 192.168.192.120
+```
+
+Note that the DNS name is based on the ZeroTier member name (as in [ZeroTier Central](https://my.zerotier.com/network)), not the hostname of the member.
+
+In order to resolve names normally, you need to get the server into the DNS lookup chain on all of your machines.
+In practise this means either configuring the system resolver on each machine to use your `ztdns` instance for your chosen domain ([Linux](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup), [macOS](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup)), or configuring the DNS server each machine uses to delegate to your `ztdns` instance for your chosen domain ([dnsmasq](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup), [bind](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup)).
+
+
+
+### Building from source
 To build from source:
 
 ``` bash
@@ -51,42 +74,22 @@ go install
 ztdns server --api-key API_KEY --network NETWORK_ID
 ```
 
-If you are running on Linux, run `sudo setcap cap_net_bind_service=+ep ./ztdns` to enable non-root users to bind privileged ports.
+If you are running on Linux, run `sudo setcap cap_net_bind_service=+ep /go/bin/ztdns` to enable non-root users to bind privileged ports.
 On other operating systems, `ztdns` may need to be run as an administrator.
-The Docker image should work as-is.
-
-TODO: pre-built releases
-
-
-Once the server is running you will be able to resolve ZeroTier network members by querying it directly:
-
-```bash
-dig @serveraddress member.zt
-```
-
-In order to resolve names normally, you need to get the server into the DNS lookup chain on all of your machines.
-The easiest way to do this is to delegate a zone from a public domain you control.
-For example, to use the name `<membername>.zt.yourdomain.com`:
-
-* Create an `A` record `ztns.yourdomain.com` with the ZeroTier IP address of your server.
-* Create an `NS` record delegating `zt.yourdomain.com` to `ztns.yourdomain.com`.
-
-Now all your machines can resolve ZeroTier names without any extra configuration.
-In fact anyone can resolve names (if they know them), but only machines on your network can actually route to them.
-Note that the DNS name is based on the ZeroTier member name (as in [ZeroTier Central](https://my.zerotier.com/network)), not the hostname of the member.
-
-
-TODO: split up install and usage?
+This does not apply to the Docker image.
 
 
 
 ## Installation as a service
+For both of these methods it is assumed your configuration is stored in a configuration file, although this is not compulsory.
+
 
 ### Docker
 To install the server as a service using the Docker image:
 
 ```bash
 docker run --detach \
+  -p 53:53/udp \
   --volume $(pwd)/ztdns.yml:/app/ztdns.yml \
   --restart=unless-stopped \
   --name=ztdns mjenz/ztdns
@@ -99,11 +102,12 @@ To install the server as a `systemd` service, create a file `/etc/systemd/system
 ```ini
 [Unit]
 Description=Zerotier DNS Server
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 WorkingDirectory=<path containing config file>
 ExecStart=ztdns server
-TimeoutStopSec=10
 Restart=on-failure
 RestartSec=5
 
@@ -167,7 +171,7 @@ Global Flags:
 
 ### Config file
 `ztdns` looks for `ztdns.yml` in the current working directory or `$HOME`.
-There is a `ztdns.example.yml` example config file with all supported options, their description and default value:
+There is a `ztdns.example.yml` example config file with all supported options and their default values:
 
 ```yaml
 # This file contains all available configuration options
@@ -223,7 +227,7 @@ round-robin:
   #   k8s-nodes: "k8s-node-\w"
 ```
 
-Configuration options can be overridden using environment variables, where the variable name is "ZTDNS_" followed by the option's name in uppercase with hyphens change to underscores (e.g. the `api-url` option is overridden by the `ZTDNS_API_URL` environment variable).
+Configuration options can be overridden using environment variables, where the variable name is "ZTDNS_" followed by the option's name in upper-case with hyphens change to underscores (e.g. the `api-url` option is overridden by the `ZTDNS_API_URL` environment variable).
 Command-line options override both.
 
 
@@ -237,5 +241,5 @@ Feel free to open an issue on GitHub.
 
 Please make sure your contributions adhere to the following guidelines:
 
-* Code must adhere to the official Go [formating](https://golang.org/doc/effective_go.html#formatting) guidelines  (i.e. uses [gofmt](https://golang.org/cmd/gofmt/)).
+* Code must adhere to the [official Go formatting guidelines](https://golang.org/doc/effective_go.html#formatting) (i.e. uses [gofmt](https://golang.org/cmd/gofmt/)).
 * Pull requests need to be based on and opened against the `master` branch.

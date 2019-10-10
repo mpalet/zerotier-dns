@@ -1,8 +1,7 @@
-# This file contains all available configuration options
-# with their default values.
+# This file contains all supported configuration options and their default values.
 
-# Network interface to bind to (or "" to bind to).  By default, only respond on
-# the ZeroTier network.
+# Network interface to bind to (or "" to bind to all interfaces).  By default, only
+# respond on the ZeroTier interface.
 interface: "zt0"
 
 # Port to listen on.
@@ -16,7 +15,7 @@ origin: "zt"
 # How often to poll the ZeroTier controller in minutes.
 refresh: 30
 
-# Whether to include offline members
+# Include members that are currently offline.
 include-offline: true
 
 # Enable debug messages.
@@ -29,7 +28,7 @@ api-key: ""
 api-url: "https://my.zerotier.com/api"
 
 # ID of the ZeroTier network.  Only one of "network" and "networks" can be
-# specified.  E.g., if there is a network with ID "123abc" this would map
+# specified.  E.g., if there is a network with ID "123abc" then this would map
 # its members to "<member name>.zt":
 #   network: "123abc"
 network:
@@ -37,8 +36,8 @@ network:
 # Mappings between subdomains and ZeroTier network IDs.  Only one of "network"
 # and "networks" can be specified.
 networks:
-  # E.g., if there is a network with ID "123abc" this would map its members to
-  # "<member name>.home.zt":
+  # E.g., if origin="zt" and there is a network with ID "123abc" then this would
+  # map its members to "<member name>.home.zt":
   #   home: "123abc"
 
 # Mappings between round-robin names and regexps to match members.  Names are

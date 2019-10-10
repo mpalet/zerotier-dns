@@ -19,10 +19,8 @@ import (
 // serverCmd represents the server command.
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Run ztDNS server",
-	Long: `Server (ztdns server) will start the DNS server.
-
-	Example: ztdns server`,
+	Short: "Run ztdns server",
+	Long: `Start the ztdns DNS server.`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// Check config and bail if anything important is missing.
 		if viper.GetBool("debug") {

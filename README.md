@@ -4,120 +4,224 @@
 
 ztDNS is a dedicated DNS server for a ZeroTier virtual network.
 
+
+
+
 ## Overview
+ztDNS pulls device names from Zerotier and makes them available by name using either IPv4-assigned addresses or IPv6-assigned addresses.
 
-ztDNS pulls device names from Zerotier and makes them available by name using either IPv4 assigned addresses or IPv6 assigned addresses.
 
-## Getting Started
 
-### Traditional
 
-If you prefer the traditional installation route:
+## Usage
+First, add a new API Access Token to your [ZeroTier account](https://my.zerotier.com/).
 
-#### Requirements
-
-* [Go tools](https://golang.org/doc/install) - if not using a precompiled release
-
-#### Install
-
-1. First use `go get` to install the latest version, or download a precompiled release from [https://github.com/mje-nz/ztdns/releases](https://github.com/mje-nz/ztdns/releases)
-    ``` bash
-    go get -u github.com/mje-nz/ztdns/
-    go build
-    ```
-2. **If you are running on Linux**, run `sudo setcap cap_net_bind_service=+eip ./ztdns` to enable non-root users to bind privileged ports. On other operating systems, the program may need to be run as an administrator.
-
-3. Add a new API access token to your user under the account tab at [https://my.zerotier.com](https://my.zerotier.com/).
-    If you do not want to store your API access token in the configuration file you can also run the
-    server with the `env` command: `env 'ZTDNS_ZT.API=<<APIToken>>' ./ztdns server`
-4. Run `ztdns mkconfig` to generate a sample configuration file.
-5. Add your API access token, Network names and IDs, and interface name to the configuration. Make sure you call ifconfig to determine your zerotier interface name. It won't always be zt0.
-6. Start the server using `ztdns server`.
-7. Add a DNS entry in your ZeroTier members pointing to the member running ztdns.
-
-Once the server is up and running you will be able to resolve names based on the short name and suffix defined in the configuration file (zt by default) from ZeroTier.
+To start the server using the Docker image:
 
 ```bash
-dig @serveraddress member.domain.zt A
-dig @serveraddress member.domain.zt AAAA
-ping member.domain.zt
+docker run --rm \
+  --volume $(pwd)/ztdns.yml:/app/ztdns.yml \
+  mjenz/ztdns server --api-key API_KEY --network NETWORK_ID
 ```
 
-### Service
+where `API_KEY` is a ZeroTier API Access Token and `NETWORK_ID` is a ZeroTier network ID.
+If your ZeroTier network interface is not called `zt0`, then you should add `--interface=<your ZeroTier interface` (or `--interface=` to operate on all interfaces).
+It is recommended to use a configuration file instead of these command-line arguments (see "Configuration" section below).
 
-If you want to create a service so this starts on boot for Ubuntu, first add a bash script which spins up the server. I called mine `start-ztdns-server`:
+To build from source:
 
-```bash
-#!/bin/sh
-/path/to/ztdns server
+``` bash
+go get -u github.com/mje-nz/ztdns/
+# or
+git clone https://github.com/mje-nz/ztdns.git
+cd ztdns
+go install
+# then
+ztdns server --api-key API_KEY --network NETWORK_ID
 ```
 
-Then add `ztdns.service` to `/etc/systemd/system/`. Make sure whatever you set `WorkingDirectory` to contains the .ztdns.toml configuration file.
+If you are running on Linux, run `sudo setcap cap_net_bind_service=+ep ./ztdns` to enable non-root users to bind privileged ports.
+On other operating systems, `ztdns` may need to be run as an administrator.
+The Docker image should work as-is.
+
+TODO: pre-built releases
+
+
+Once the server is running you will be able to resolve ZeroTier network members by querying it directly:
 
 ```bash
+dig @serveraddress member.zt
+```
+
+In order to resolve names normally, you need to get the server into the DNS lookup chain on all of your machines.
+The easiest way to do this is to delegate a zone from a public domain you control.
+For example, to use the name `<membername>.zt.yourdomain.com`:
+
+* Create an `A` record `ztns.yourdomain.com` with the ZeroTier IP address of your server.
+* Create an `NS` record delegating `zt.yourdomain.com` to `ztns.yourdomain.com`.
+
+Now all your machines can resolve ZeroTier names without any extra configuration.
+In fact anyone can resolve names (if they know them), but only machines on your network can actually route to them.
+
+
+TODO: split up install and usage?
+
+
+
+## Installation as a service
+
+### Docker
+To install the server as a service using the Docker image:
+
+```bash
+docker run --detach \
+  --volume $(pwd)/ztdns.yml:/app/ztdns.yml \
+  --restart=unless-stopped \
+  --name=ztdns mjenz/ztdns
+```
+
+
+### Systemd
+To install the server as a `systemd` service, create a file `/etc/systemd/system/ztdns.service` containing:
+
+```toml
 [Unit]
 Description=Zerotier DNS Server
+
 [Service]
-User=<user_name>
-# The configuration file application.properties should be here:
-#change this to your workspace
-WorkingDirectory=/path/containing/ztdns_config/
-#path to executable.
-#executable is a bash script which calls jar file
-ExecStart=/path/to/start-ztdns-server
-SuccessExitStatus=143
+WorkingDirectory=<path containing config file>
+ExecStart=ztdns server
 TimeoutStopSec=10
 Restart=on-failure
 RestartSec=5
+
 [Install]
 WantedBy=multi-user.target
 ```
 
-Then run systemctl enable and start:
+Make sure whatever you set `WorkingDirectory` to the directory containing your configuration file.
+
+Then, to install the service:
 
 ```bash
+# Reload service files
 sudo systemctl daemon-reload
+# Set ztdns service to start on boot
 sudo systemctl enable ztdns.service
+# Also start ztdns service right now
 sudo systemctl start ztdns.service
 ```
 
-If you want to stop the service
+To uninstall the service:
 
 ```bash
+# Stop ztdns service
 sudo systemctl stop ztdns.service
+# Stop ztdns service from starting on boot
 sudo systemctl disable ztdns.service
 ```
 
-### Docker
 
-If you prefer to run the server with Docker:
 
-#### Docker Requirements
+## Configuration
 
-* [Docker](https://docs.docker.com/install/)
-* [Docker Compose](https://docs.docker.com/compose/install/)
 
-#### Docker Install
-
-1. Clone or download this repo
-1. Create a `.ztdns.toml` file in the main directory by copying the `.ztdns.toml.example` file.
-1. Add your API access token, Network ID, and interface name to the newly created configuration file.
-1. By default it will be bound to port 5356 on the host, that can be changed to standard DNS port 53 by modifying the `docker-compose.yml` file. *You must be running Docker with root permissions in order to bind the privileged port properly.*
-1. Run `docker-compose up` to start the server.
-1. Add a DNS entry in your ZeroTier members pointing to the member running ztdns.
-
-Once the server is up and running you will be able to resolve names based on the short name, domain and suffix defined in the configuration file (zt by default) from ZeroTier.
-
+### Command-line options:
 ```bash
-# remove -p 5356 if running on port 53
-dig @127.0.0.1 -p 5356 member.domain.zt A
-dig @127.0.0.1 -p 5356 member.domain.zt AAAA
-ping member.domain.zt
+$ ztdns server --help
+Server (ztdns server) will start the DNS server.
+
+  Example: ztdns server
+
+Usage:
+  ztdns server [flags]
+
+Flags:
+      --api-key string     ZeroTier API key
+      --api-url string     ZeroTier API URL (default "https://my.zerotier.com/api")
+      --domain string      domain to serve names under (default "zt")
+  -h, --help               help for server
+      --include-offline    include offline members (default true)
+      --interface string   network interface to bind to (default "zt0")
+      --network string     ZeroTier Network ID
+      --port int           port to listen on (default 53)
+      --refresh int        how often to poll the ZeroTier controller in minutes (default 30)
+
+Global Flags:
+      --config string   config file (default is ztdns.yml)
+      --debug           enable debug messages
 ```
+
+
+### Config file
+`ztdns` looks for `ztdns.yml` in the current working directory or `$HOME`.
+There is a `ztdns.example.yml` example config file with all supported options, their description and default value:
+
+```yaml
+# This file contains all available configuration options
+# with their default values.
+
+# Network interface to bind to (or "" to bind to).  By default, only respond on
+# the ZeroTier network.
+interface: "zt0"
+
+# Port to listen on.
+port: 53
+
+# Base domain.  Could be a top-level domain for internal use only (e.g., zt) or
+# a domain name with one or more subdomains (e.g., internal.yourdomain.com).
+# By default, map members to "<member name>.zt".
+origin: "zt"
+
+# How often to poll the ZeroTier controller in minutes.
+refresh: 30
+
+# Whether to include offline members
+include-offline: true
+
+# Enable debug messages.
+debug: false
+
+# An API key for your ZeroTier account (required).
+api-key: ""
+
+# The base API URL for the ZeroTier controller.
+api-url: "https://my.zerotier.com/api"
+
+# ID of the ZeroTier network.  Only one of "network" and "networks" can be
+# specified.  E.g., if there is a network with ID "123abc" this would map
+# its members to "<member name>.zt":
+#   network: "123abc"
+network:
+
+# Mappings between subdomains and ZeroTier network IDs.  Only one of "network"
+# and "networks" can be specified.
+networks:
+  # E.g., if there is a network with ID "123abc" this would map its members to
+  # "<member name>.home.zt":
+  #   home: "123abc"
+
+# Mappings between round-robin names and regexps to match members.  Names are
+# matched within each network (i.e., if there are members matching a mapping in
+# multiple networks then the name will be defined separately in each).
+round-robin:
+  # E.g., if the "home" network defined above had members "k8s-node-23refw" and
+  # "k8s-node-09sf8g" this would create a name "k8s-nodes.home.zt" returning one
+  # of them at random:
+  #   k8s-nodes: "k8s-node-\w"
+```
+
+Configuration options can be overridden using environment variables, where the variable name is "ZTDNS_" followed by the option's name in uppercase with hyphens change to underscores (e.g. the `api-url` option is overridden by the `ZTDNS_API_URL` environment variable).
+Command-line options override both.
+
+
 
 ## Contributing
 
-Thanks for considering contributing to the project. We welcome contributions, issues or requests from anyone, and are grateful for any help. Problems or questions? Feel free to open an issue on GitHub.
+Thanks for considering contributing to the project.
+We welcome contributions, issues or requests from anyone, and are grateful for any help.
+Problems or questions?
+Feel free to open an issue on GitHub.
 
 Please make sure your contributions adhere to the following guidelines:
 

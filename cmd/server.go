@@ -91,6 +91,23 @@ func init() {
 	viper.BindPFlags(serverCmd.Flags())
 }
 
+// TODO add tests
+
+// memberNameToDNSLabel converts a ZeroTier member name into a valid DNS label.
+// See RFC 1035 section 2.3.1 (https://tools.ietf.org/html/rfc1035).
+func memberNameToDNSLabel(name string) string {
+	// Convert to lower-case so lookup is case-insensitive
+	name = strings.ToLower(name)
+	// Labels may consist of letters, digits and hyphens
+	name = strings.ReplaceAll(name, " ", "-")
+	re := regexp.MustCompile("[^a-z0-9-]+")
+	name = re.ReplaceAllString(name, "")
+	// TODO must start with a letter
+	// TODO must end with a letter or digit
+	// TODO must be 63 characters or less
+	return name
+}
+
 // TODO: refactor
 func updateDNS() time.Time {
 	// Get config info
@@ -114,6 +131,7 @@ func updateDNS() time.Time {
 
 	// Get all configured networks:
 	for domain, networkID := range networks {
+		// TODO: Handle configuration with dots
 		suffix := "." + rootDomain + "."
 		if domain != "" {
 			suffix = "." + domain + suffix
@@ -134,14 +152,11 @@ func updateDNS() time.Time {
 		for _, n := range *lst {
 			if includeOffline || n.Online {
 				// Sanitize member name
-				name := strings.ToLower(n.Name)
-				name = strings.ReplaceAll(name, " ", "-")
-				re := regexp.MustCompile("[^a-zA-Z0-9-]+")
-				name = re.ReplaceAllString(name, "")
-				record := name + suffix
+				name := memberNameToDNSLabel(n.Name)
+				fqdn := name + suffix
 
 				// Clear current DNS records
-				dnssrv.DNSDatabase[record] = dnssrv.Records{}
+				dnssrv.DNSDatabase[fqdn] = dnssrv.Records{}
 				ip6 := []net.IP{}
 				ip4 := []net.IP{}
 				// Get 6Plane address if network has it enabled
@@ -163,9 +178,9 @@ func updateDNS() time.Time {
 					AAAA: ip6,
 				}
 
-				// Add the record to the database
-				log.Infof("Updating %-15s IPv4: %-15s IPv6: %s", record, ip4, ip6)
-				dnssrv.DNSDatabase[record] = dnsRecord
+				// Add the FQDN to the database
+				log.Infof("Updating %-20s IPv4: %-15s IPv6: %s", fqdn, ip4, ip6)
+				dnssrv.DNSDatabase[fqdn] = dnsRecord
 
 				// Finding matches for RoundRobin dns
 				for host, re := range rrDNSPatterns {

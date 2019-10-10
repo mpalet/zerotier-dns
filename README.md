@@ -93,7 +93,7 @@ docker run --detach \
 ### Systemd
 To install the server as a `systemd` service, create a file `/etc/systemd/system/ztdns.service` containing:
 
-```toml
+```ini
 [Unit]
 Description=Zerotier DNS Server
 

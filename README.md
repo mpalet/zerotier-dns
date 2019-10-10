@@ -1,15 +1,23 @@
-# ZerotierDNS
-[![MicroBadger size](https://img.shields.io/microbadger/image-size/mjenz/ztdns)](https://microbadger.com/images/mjenz/ztdns)
-[![Pre-commit workflow status](https://github.com/mje-nz/ztdns/workflows/Check/badge.svg)](https://github.com/mje-nz/ztdns)
+<h1 align="center">
+  ztdns
+</h1>
 
-ztDNS is a dedicated DNS server for a ZeroTier virtual network.
+<h4 align="center">
+  A DNS server for ZeroTier virtual networks.
+</h4>
+
+<p align="center">
+    <img src="https://github.com/mje-nz/ztdns/workflows/Check/badge.svg"
+         alt="Github Actions">
+</p>
 
 
+## Features
 
-
-## Overview
-ztDNS pulls device names from Zerotier and makes them available by name using either IPv4-assigned addresses or IPv6-assigned addresses.
-
+* Address members of ZeroTier networks by name
+* IPv4 and IPv6 support (A and AAAA records)
+* Create round-robin DNS names
+* Tiny Docker image for easy setup
 
 
 
@@ -62,6 +70,7 @@ For example, to use the name `<membername>.zt.yourdomain.com`:
 
 Now all your machines can resolve ZeroTier names without any extra configuration.
 In fact anyone can resolve names (if they know them), but only machines on your network can actually route to them.
+Note that the DNS name is based on the ZeroTier member name (as in [ZeroTier Central](https://my.zerotier.com/network)), not the hostname of the member.
 
 
 TODO: split up install and usage?

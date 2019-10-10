@@ -11,6 +11,9 @@
          alt="Github Actions">
 </p>
 
+This is a fork of [uxbh/ztdns](https://github.com/uxbh/ztdns).
+
+
 
 ## Features
 

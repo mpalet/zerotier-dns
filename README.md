@@ -7,7 +7,7 @@
 </h4>
 
 <p align="center">
-    <img src="https://github.com/mje-nz/ztdns/workflows/Check/badge.svg"
+    <img src="https://github.com/mje-nz/ztdns/workflows/Check%2C%20build/badge.svg"
          alt="Github Actions">
 </p>
 

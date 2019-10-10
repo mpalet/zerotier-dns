@@ -8,7 +8,7 @@
 # and the Docker version on Docker Hub is super outdated.  Oh well, this is
 # faster anyway.
 
-name: Run checks, build and publish Docker image
+name: Check, build
 on: [push]
 jobs:
   Check:
@@ -43,14 +43,18 @@ jobs:
           -t mjenz/ztdns:builder \
           .
         docker push mjenz/ztdns:builder
-    - name: Build and push image
+    - name: Build image
       run: |
         DOCKER_BUILDKIT=1 docker build \
           --cache-from mjenz/ztdns:builder \
           -t mjenz/ztdns:latest \
           .
+    - name: Push image
+      if: github.ref == 'master'
+      run: |
         docker push mjenz/ztdns:latest
     - name: Update Docker Hub description
+      if: github.ref == 'master'
       uses: peter-evans/dockerhub-description@v2.1.0
       env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}

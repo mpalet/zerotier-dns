@@ -116,12 +116,11 @@ func updateDNS() time.Time {
 	rootDomain := viper.GetString("domain")
 	includeOffline := viper.GetBool("include-offline")
 
-	rrDNSPatterns := make(map[string]*regexp.Regexp)
-	rrDNSRecords := make(map[string][]dnssrv.Records)
+	roundRobinPatterns := make(map[string]*regexp.Regexp)
+	roundRobinRecords := make(map[string][]dnssrv.Records)
 
-	for re, host := range viper.GetStringMapString("round-robin") {
-		rrDNSPatterns[host] = regexp.MustCompile(re)
-		log.Debugf("Creating match '%s' for %s host", re, host)
+	for subdomain, re := range viper.GetStringMapString("round-robin") {
+		roundRobinPatterns[subdomain] = regexp.MustCompile(re)
 	}
 
 	networks := viper.GetStringMapString("networks")
@@ -182,28 +181,28 @@ func updateDNS() time.Time {
 				log.Infof("Updating %-20s IPv4: %-15s IPv6: %s", fqdn, ip4, ip6)
 				dnssrv.DNSDatabase[fqdn] = dnsRecord
 
-				// Finding matches for RoundRobin dns
-				for host, re := range rrDNSPatterns {
-					log.Debugf("Checking matches for %s host", host)
-					if match := re.FindStringSubmatch(n.Name); match != nil {
-						rrRecord := host + "." + domain + "." + suffix + "."
-
-						log.Infof("Adding ips to RR record %-15s IPv4: %-15s IPv6: %s, from host %s", rrRecord, ip4, ip6, n.Name)
-						rrDNSRecords[rrRecord] = append(rrDNSRecords[rrRecord], dnsRecord)
+				// Add a record for any round-robin names it matches the pattern for
+				for subdomain, re := range roundRobinPatterns {
+					if match := re.FindStringSubmatch(name); match != nil {
+						roundRobinFQDN := subdomain + suffix
+						log.Debugf("Adding member %s to RR record %s IPv4: %-15s IPv6: %s", name, roundRobinFQDN, ip4, ip6)
+						roundRobinRecords[roundRobinFQDN] = append(roundRobinRecords[roundRobinFQDN], dnsRecord)
 					}
 				}
 			}
 		}
 
-		for rrRecord, dnsRecords := range rrDNSRecords {
-			rrRecordIps := dnssrv.Records{}
-			for _, ips := range dnsRecords {
-				rrRecordIps.A = append(rrRecordIps.A, ips.A...)
-				rrRecordIps.AAAA = append(rrRecordIps.AAAA, ips.AAAA...)
+		// Collect round-robin records and add to main database
+		// TODO: Any reason this needs to be separate?
+		for roundRobinFQDN, records := range roundRobinRecords {
+			dnsRecord := dnssrv.Records{}
+			for _, ips := range records {
+				dnsRecord.A = append(dnsRecord.A, ips.A...)
+				dnsRecord.AAAA = append(dnsRecord.AAAA, ips.AAAA...)
 			}
 
-			log.Infof("Updating %-15s IPv4: %-15s IPv6: %s", rrRecord, rrRecordIps.A, rrRecordIps.AAAA)
-			dnssrv.DNSDatabase[rrRecord] = rrRecordIps
+			log.Infof("Updating %-20s IPv4: %-15s IPv6: %s", roundRobinFQDN, dnsRecord.A, dnsRecord.AAAA)
+			dnssrv.DNSDatabase[roundRobinFQDN] = dnsRecord
 		}
 	}
 

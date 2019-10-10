@@ -16,7 +16,7 @@ import (
 	"github.com/mje-nz/ztdns/ztapi"
 )
 
-// serverCmd represents the server command
+// serverCmd represents the server command.
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Run ztDNS server",
@@ -41,14 +41,14 @@ var serverCmd = &cobra.Command{
 		log.Debugf("round-robin: %#v", viper.GetStringMapString("round-robin"))
 
 		if viper.GetString("api-key") == "" {
-			return fmt.Errorf("No API key provided")
+			return fmt.Errorf("no API key provided")
 		}
 
 		if viper.GetString("network") == "" && !viper.IsSet("networks") {
-			return fmt.Errorf("No networks configured (specify network or networks)")
+			return fmt.Errorf("no networks configured (specify network or networks)")
 		}
 		if viper.GetString("network") != "" && viper.IsSet("networks") {
-			return fmt.Errorf("Conflicting network configuration (specify one of network or networks)")
+			return fmt.Errorf("conflicting network configuration (specify one of network or networks)")
 		}
 
 		return nil

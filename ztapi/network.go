@@ -10,7 +10,7 @@ func GetNetworkInfo(API, host, networkID string) (*Network, error) {
 	url := fmt.Sprintf("%s/network/%s", host, networkID)
 	err := getJSON(url, API, resp)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get network info: %s", err.Error())
+		return nil, fmt.Errorf("unable to get network info: %s", err.Error())
 	}
 	return resp, nil
 }

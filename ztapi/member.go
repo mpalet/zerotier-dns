@@ -14,7 +14,7 @@ func GetMemberInfo(API, host, networkID, memberID string) (*Member, error) {
 	url := fmt.Sprintf("%s/network/%s/member/%s", host, networkID, memberID)
 	err := getJSON(url, API, resp)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get member info: %s", err.Error())
+		return nil, fmt.Errorf("unable to get member info: %s", err.Error())
 	}
 	return resp, nil
 }
@@ -25,7 +25,7 @@ func GetMemberList(API, host, networkID string) (*Members, error) {
 	url := fmt.Sprintf("%s/network/%s/member", host, networkID)
 	err := getJSON(url, API, resp)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get member list: %s", err.Error())
+		return nil, fmt.Errorf("unable to get member list: %s", err.Error())
 	}
 	return resp, nil
 }

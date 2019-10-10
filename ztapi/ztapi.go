@@ -1,6 +1,6 @@
 // Copyright © 2017 uxbh
 
-//Package ztapi implements a (partial) API client to a ZeroTier service.
+// Package ztapi implements a (partial) API client to a ZeroTier service.
 package ztapi
 
 import (

@@ -12,15 +12,15 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/mje-nz/ztdns/dnssrv"
-	"github.com/mje-nz/ztdns/ztapi"
+	"github.com/mje-nz/zerotier-dns/dnssrv"
+	"github.com/mje-nz/zerotier-dns/ztapi"
 )
 
 // serverCmd represents the server command.
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Run ztdns server",
-	Long: `Start the ztdns DNS server.`,
+	Short: "Run zerotier-dns server",
+	Long: `Start the zerotier-dns DNS server.`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// Check config and bail if anything important is missing.
 		if viper.GetBool("debug") {

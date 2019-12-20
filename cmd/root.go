@@ -1,6 +1,6 @@
 // Copyright © 2017 uxbh
 
-// Package cmd implments the ztdns command-line interface.
+// Package cmd implments the zerotier-dns command-line interface.
 package cmd
 
 import (
@@ -15,9 +15,9 @@ import (
 var cfgFile string
 
 var RootCmd = &cobra.Command{
-	Use:   "ztdns",
-	Short: "Zerotier DNS Server",
-	Long: `ztDNS is a DNS server for ZeroTier virtual networks.
+	Use:   "zerotier-dns",
+	Short: "ZeroTier DNS Server",
+	Long: `zerotier-dns is a DNS server for ZeroTier virtual networks.
 This application will serve DNS requests for the members of a ZeroTier
 network for both A (IPv4) and AAAA (IPv6) requests`,
 }
@@ -32,7 +32,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().Bool("debug", false, "enable debug messages")
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ztdns.yml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is zerotier-dns.yml)")
 	viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug"))
 
 }
@@ -43,7 +43,7 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	} else {
 		// Find config file in current directory or $HOME
-		viper.SetConfigName("ztdns")
+		viper.SetConfigName("zerotier-dns")
 		viper.AddConfigPath(".")
 		viper.AddConfigPath("$HOME")
 	}

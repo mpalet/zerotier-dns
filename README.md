@@ -1,5 +1,5 @@
 <h1 align="center">
-  ztdns
+  zerotier-dns
 </h1>
 
 <h4 align="center">
@@ -7,8 +7,8 @@
 </h4>
 
 <p align="center">
-  <a href="https://github.com/mje-nz/ztdns">
-    <img src="https://github.com/mje-nz/ztdns/workflows/Check/badge.svg"
+  <a href="https://github.com/mje-nz/zerotier-dns">
+    <img src="https://github.com/mje-nz/zerotier-dns/workflows/Check/badge.svg"
          alt="Github Actions">
   </a>
 </p>
@@ -34,8 +34,8 @@ To start the server using the Docker image:
 ```bash
 docker run --rm \
   -p 53:53/udp \
-  --volume $(pwd)/ztdns.yml:/app/ztdns.yml \
-  mjenz/ztdns server --api-key API_KEY --network NETWORK_ID
+  --volume $(pwd)/zerotier-dns.yml:/app/zerotier-dns.yml \
+  mjenz/zerotier-dns server --api-key API_KEY --network NETWORK_ID
 ```
 
 where `API_KEY` is a ZeroTier API token and `NETWORK_ID` is a ZeroTier network ID.
@@ -45,7 +45,7 @@ It is recommended to use a configuration file instead of these command-line argu
 Once the server is running you will be able to resolve ZeroTier member names by querying it directly:
 
 ```bash
-dig @<server address> <member name>.<ztdns domain>
+dig @<server address> <member name>.<domain>
 
 ;; QUESTION SECTION:
 ;matthews-mbp.zt.   IN  A
@@ -57,7 +57,7 @@ matthews-mbp.zt.  3600  IN  A 192.168.192.120
 Note that the DNS name is based on the ZeroTier member name (as shown in [ZeroTier Central](https://my.zerotier.com/network)), not the hostname of the member.
 
 In order to resolve names normally, you need to get the server into the DNS lookup chain on all of your machines.
-In practise this means either configuring the system resolver on each machine to use your `ztdns` instance for your chosen domain (see instructions for [Linux](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup) or [macOS](https://learn.hashicorp.com/consul/security-networking/forwarding#macos-setup)), or configuring the DNS server each machine uses to delegate to your `ztdns` instance for your chosen domain (see instructions for [dnsmasq](https://learn.hashicorp.com/consul/security-networking/forwarding#dnsmasq-setup) or [bind](https://learn.hashicorp.com/consul/security-networking/forwarding#bind-setup)).
+In practise this means either configuring the system resolver on each machine to use your `zerotier-dns` instance for your chosen domain (see instructions for [Linux](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup) or [macOS](https://learn.hashicorp.com/consul/security-networking/forwarding#macos-setup)), or configuring the DNS server each machine uses to delegate to your `zerotier-dns` instance for your chosen domain (see instructions for [dnsmasq](https://learn.hashicorp.com/consul/security-networking/forwarding#dnsmasq-setup) or [bind](https://learn.hashicorp.com/consul/security-networking/forwarding#bind-setup)).
 
 
 
@@ -65,17 +65,17 @@ In practise this means either configuring the system resolver on each machine to
 To build from source:
 
 ``` bash
-go get -u github.com/mje-nz/ztdns/
+go get -u github.com/mje-nz/zerotier-dns/
 # or
-git clone https://github.com/mje-nz/ztdns.git
-cd ztdns
+git clone https://github.com/mje-nz/zerotier-dns.git
+cd zerotier-dns
 go install
 # then
-ztdns server --api-key API_KEY --network NETWORK_ID
+zerotier-dns server --api-key API_KEY --network NETWORK_ID
 ```
 
-If you are running on Linux, run `sudo setcap cap_net_bind_service=+ep /go/bin/ztdns` to enable non-root users to bind privileged ports.
-On other operating systems, `ztdns` may need to be run as an administrator.
+If you are running on Linux, run `sudo setcap cap_net_bind_service=+ep /go/bin/zerotier-dns` to enable non-root users to bind privileged ports.
+On other operating systems, `zerotier-dns` may need to be run as an administrator.
 This does not apply to the Docker image.
 
 
@@ -90,24 +90,24 @@ To install the server as a service using the Docker image:
 ```bash
 docker run --detach \
   -p 53:53/udp \
-  --volume $(pwd)/ztdns.yml:/app/ztdns.yml \
+  --volume $(pwd)/zerotier-dns.yml:/app/zerotier-dns.yml \
   --restart=unless-stopped \
-  --name=ztdns mjenz/ztdns
+  --name=zerotier-dns mjenz/zerotier-dns
 ```
 
 
 ### Systemd
-To install the server as a `systemd` service, create a file `/etc/systemd/system/ztdns.service` containing:
+To install the server as a `systemd` service, create a file `/etc/systemd/system/zerotier-dns.service` containing:
 
 ```ini
 [Unit]
-Description=Zerotier DNS Server
+Description=ZeroTier DNS Server
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 WorkingDirectory=<path containing config file>
-ExecStart=ztdns server
+ExecStart=zerotier-dns server
 Restart=on-failure
 RestartSec=5
 
@@ -122,19 +122,19 @@ Then, to install the service:
 ```bash
 # Reload service files
 sudo systemctl daemon-reload
-# Set ztdns service to start on boot
-sudo systemctl enable ztdns.service
-# Also start ztdns service right now
-sudo systemctl start ztdns.service
+# Set zerotier-dns service to start on boot
+sudo systemctl enable zerotier-dns.service
+# Also start zerotier-dns service right now
+sudo systemctl start zerotier-dns.service
 ```
 
 To uninstall the service:
 
 ```bash
-# Stop ztdns service
-sudo systemctl stop ztdns.service
-# Stop ztdns service from starting on boot
-sudo systemctl disable ztdns.service
+# Stop zerotier-dns service
+sudo systemctl stop zerotier-dns.service
+# Stop zerotier-dns service from starting on boot
+sudo systemctl disable zerotier-dns.service
 ```
 
 
@@ -144,13 +144,11 @@ sudo systemctl disable ztdns.service
 
 ### Command-line options:
 ```bash
-$ ztdns server --help
-Server (ztdns server) will start the DNS server.
-
-  Example: ztdns server
+$ zerotier-dns server --help
+Start the zerotier-dns DNS server.
 
 Usage:
-  ztdns server [flags]
+  zerotier-dns server [flags]
 
 Flags:
       --api-key string     ZeroTier API key
@@ -164,14 +162,14 @@ Flags:
       --refresh int        how often to poll the ZeroTier controller in minutes (default 30)
 
 Global Flags:
-      --config string   config file (default is ztdns.yml)
+      --config string   config file (default is zerotier-dns.yml)
       --debug           enable debug messages
 ```
 
 
 ### Config file
-`ztdns` looks for `ztdns.yml` in the current working directory or `$HOME`.
-There is a `ztdns.example.yml` example config file with all supported options and their default values:
+`zerotier-dns` looks for `zerotier-dns.yml` in the current working directory or `$HOME`.
+There is a `zerotier-dns.example.yml` example config file with all supported options and their default values:
 
 ```yaml
 # Network interface to bind to (or "" to bind to all interfaces).  By default, only

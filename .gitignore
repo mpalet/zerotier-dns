@@ -1,10 +1,10 @@
-ztdns.yml
-ztdns.toml
+zerotier-dns.yml
+zerotier-dns.toml
 
 .vscode/
 
 # Binaries for programs and plugins
-/ztdns
+/zerotier-dns
 *.exe
 *.exe~
 *.dll

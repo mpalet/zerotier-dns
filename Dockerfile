@@ -1,9 +1,9 @@
 ARG GO_VERSION=1.13
 FROM golang:${GO_VERSION} AS builder
 
-RUN useradd ztdns
+RUN useradd zerotier-dns
 
-WORKDIR /go/src/github.com/mje-nz/ztdns
+WORKDIR /go/src/github.com/mje-nz/zerotier-dns
 
 # Fetch and cache dependencies
 COPY ./go.mod ./go.sum ./
@@ -14,7 +14,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go install -ldflags="-w -s" && \
 	# NB Only works on BuildKit
 	# https://github.com/moby/moby/issues/35699
-	setcap cap_net_bind_service=+ep /go/bin/ztdns
+	setcap cap_net_bind_service=+ep /go/bin/zerotier-dns
 
 
 
@@ -27,10 +27,10 @@ COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 WORKDIR /app
-COPY --from=builder /go/bin/ztdns .
+COPY --from=builder /go/bin/zerotier-dns .
 
-USER ztdns
+USER zerotier-dns
 
-ENTRYPOINT ["./ztdns"]
+ENTRYPOINT ["./zerotier-dns"]
 CMD ["server"]
 EXPOSE 53/udp

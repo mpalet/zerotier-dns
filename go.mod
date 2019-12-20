@@ -1,4 +1,4 @@
-module github.com/mje-nz/ztdns
+module github.com/mje-nz/zerotier-dns
 
 go 1.12
 

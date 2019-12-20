@@ -36,27 +36,27 @@ jobs:
         echo ${PASSWORD} | docker login -u ${USERNAME} --password-stdin
     - name: Fetch dependencies
       run: |
-        docker pull mjenz/ztdns:builder || true
+        docker pull mjenz/zerotier-dns:builder || true
         DOCKER_BUILDKIT=1 docker build \
           --target builder \
-          --cache-from mjenz/ztdns:builder \
-          -t mjenz/ztdns:builder \
+          --cache-from mjenz/zerotier-dns:builder \
+          -t mjenz/zerotier-dns:builder \
           .
-        docker push mjenz/ztdns:builder
+        docker push mjenz/zerotier-dns:builder
     - name: Build image
       run: |
         DOCKER_BUILDKIT=1 docker build \
-          --cache-from mjenz/ztdns:builder \
-          -t mjenz/ztdns:latest \
+          --cache-from mjenz/zerotier-dns:builder \
+          -t mjenz/zerotier-dns:latest \
           .
     - name: Push image
       if: github.ref == 'master'
       run: |
-        docker push mjenz/ztdns:latest
+        docker push mjenz/zerotier-dns:latest
     - name: Update Docker Hub description
       if: github.ref == 'master'
       uses: peter-evans/dockerhub-description@v2.1.0
       env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKERHUB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          DOCKERHUB_REPOSITORY: mjenz/ztdns
+          DOCKERHUB_REPOSITORY: mjenz/zerotier-dns

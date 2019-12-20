@@ -1,5 +1,3 @@
-// Copyright © 2017 uxbh
-
 // Package dnssrv implements a simple DNS server.
 package dnssrv
 

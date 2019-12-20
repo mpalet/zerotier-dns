@@ -1,5 +1,3 @@
-// Copyright © 2017 uxbh
-
 // Package cmd implments the zerotier-dns command-line interface.
 package cmd
 

@@ -42,7 +42,7 @@ where `API_KEY` is a ZeroTier API token and `NETWORK_ID` is a ZeroTier network I
 If your ZeroTier network interface is not called `zt0`, then you should add `--interface=<your ZeroTier interface>` (or `--interface=` to listen on all interfaces).
 It is recommended to use a configuration file instead of these command-line arguments (see ["Configuration"](#configuration) section below).
 
-Once the server is running you will be able to resolve ZeroTier network member names by querying it directly:
+Once the server is running you will be able to resolve ZeroTier member names by querying it directly:
 
 ```bash
 dig @<server address> <member name>.<ztdns domain>
@@ -54,14 +54,14 @@ dig @<server address> <member name>.<ztdns domain>
 matthews-mbp.zt.  3600  IN  A 192.168.192.120
 ```
 
-Note that the DNS name is based on the ZeroTier member name (as in [ZeroTier Central](https://my.zerotier.com/network)), not the hostname of the member.
+Note that the DNS name is based on the ZeroTier member name (as shown in [ZeroTier Central](https://my.zerotier.com/network)), not the hostname of the member.
 
 In order to resolve names normally, you need to get the server into the DNS lookup chain on all of your machines.
-In practise this means either configuring the system resolver on each machine to use your `ztdns` instance for your chosen domain ([Linux](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup), [macOS](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup)), or configuring the DNS server each machine uses to delegate to your `ztdns` instance for your chosen domain ([dnsmasq](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup), [bind](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup)).
+In practise this means either configuring the system resolver on each machine to use your `ztdns` instance for your chosen domain (see instructions for [Linux](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup) or [macOS](https://learn.hashicorp.com/consul/security-networking/forwarding#macos-setup)), or configuring the DNS server each machine uses to delegate to your `ztdns` instance for your chosen domain (see instructions for [dnsmasq](https://learn.hashicorp.com/consul/security-networking/forwarding#dnsmasq-setup) or [bind](https://learn.hashicorp.com/consul/security-networking/forwarding#bind-setup)).
 
 
 
-### Building from source
+## Building from source
 To build from source:
 
 ``` bash
@@ -115,7 +115,7 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-Make sure whatever you set `WorkingDirectory` to the directory containing your configuration file.
+Make sure you set `WorkingDirectory` to the directory containing your configuration file.
 
 Then, to install the service:
 
@@ -174,11 +174,8 @@ Global Flags:
 There is a `ztdns.example.yml` example config file with all supported options and their default values:
 
 ```yaml
-# This file contains all available configuration options
-# with their default values.
-
-# Network interface to bind to (or "" to bind to).  By default, only respond on
-# the ZeroTier network.
+# Network interface to bind to (or "" to bind to all interfaces).  By default, only
+# respond on the ZeroTier interface.
 interface: "zt0"
 
 # Port to listen on.
@@ -192,7 +189,7 @@ origin: "zt"
 # How often to poll the ZeroTier controller in minutes.
 refresh: 30
 
-# Whether to include offline members
+# Include members that are currently offline.
 include-offline: true
 
 # Enable debug messages.
@@ -205,7 +202,7 @@ api-key: ""
 api-url: "https://my.zerotier.com/api"
 
 # ID of the ZeroTier network.  Only one of "network" and "networks" can be
-# specified.  E.g., if there is a network with ID "123abc" this would map
+# specified.  E.g., if there is a network with ID "123abc" then this would map
 # its members to "<member name>.zt":
 #   network: "123abc"
 network:
@@ -213,8 +210,8 @@ network:
 # Mappings between subdomains and ZeroTier network IDs.  Only one of "network"
 # and "networks" can be specified.
 networks:
-  # E.g., if there is a network with ID "123abc" this would map its members to
-  # "<member name>.home.zt":
+  # E.g., if origin="zt" and there is a network with ID "123abc" then this would
+  # map its members to "<member name>.home.zt":
   #   home: "123abc"
 
 # Mappings between round-robin names and regexps to match members.  Names are
@@ -227,7 +224,7 @@ round-robin:
   #   k8s-nodes: "k8s-node-\w"
 ```
 
-Configuration options can be overridden using environment variables, where the variable name is "ZTDNS_" followed by the option's name in upper-case with hyphens change to underscores (e.g. the `api-url` option is overridden by the `ZTDNS_API_URL` environment variable).
+Configuration options can be overridden using environment variables, where the variable name is "ZTDNS_" followed by the option's name in upper-case with hyphens changed to underscores (e.g., the `api-url` option is overridden by the `ZTDNS_API_URL` environment variable).
 Command-line options override both.
 
 

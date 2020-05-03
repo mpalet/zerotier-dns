@@ -3,6 +3,7 @@
 package ztapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"strconv"
@@ -56,7 +57,7 @@ type Member struct {
 			Ts int
 		}
 		Authorized           bool
-		Capabilities         []string
+		Capabilities         []json.RawMessage
 		CreationTime         apiTime
 		ID                   string
 		Identity             string
@@ -68,7 +69,7 @@ type Member struct {
 		Objtype              string
 		PhysicalAddr         string
 		Revision             int
-		Tags                 []string
+		Tags                 []json.RawMessage
 		VMajor               int
 		VMinor               int
 		VProto               int

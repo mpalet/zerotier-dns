@@ -2,7 +2,10 @@
 
 package ztapi
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // GetNetworkInfo returns a Nework containing information about a ZeroTier network
 func GetNetworkInfo(API, host, networkID string) (*Network, error) {
@@ -32,7 +35,7 @@ type Network struct {
 	Config struct {
 		ActiveMemberCount     int
 		AuthorizedMemberCount int
-		Capabilities          []string
+		Capabilities          []json.RawMessage
 		Clock                 apiTime
 		CreationTime          apiTime
 		EnableBroadcast       bool
@@ -57,7 +60,7 @@ type Network struct {
 			Or        bool
 			Type      string
 		}
-		Tags             []string
+		Tags             []json.RawMessage
 		TotalMemberCount int
 		V4AssignMode     struct {
 			Zt bool
@@ -79,6 +82,6 @@ type Network struct {
 	}
 	OnlineMemberCount int
 	CapabilitesByName map[string]string
-	TagsByName        map[string]string
+	TagsByName        map[string]json.RawMessage
 	CircuitTestEvery  int
 }

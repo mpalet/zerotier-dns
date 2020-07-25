@@ -99,6 +99,7 @@ func handleDNSRequest(w dns.ResponseWriter, r *dns.Msg) {
 	m := new(dns.Msg)
 	m.SetReply(r)
 	m.Compress = false
+	m.Authoritative = true
 
 	switch r.Opcode {
 	case dns.OpcodeQuery:

@@ -55,8 +55,8 @@ jobs:
         docker push mjenz/zerotier-dns:latest
     - name: Update Docker Hub description
       if: github.ref == 'refs/heads/master'
-      uses: mje-nz/dockerhub-description@master
-      env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKERHUB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          DOCKERHUB_REPOSITORY: mjenz/zerotier-dns
+      uses: peter-evans/dockerhub-description@v2.4.1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        repository: mjenz/zerotier-dns

@@ -173,7 +173,9 @@ There is a `zerotier-dns.example.yml` example config file with all supported opt
 
 ```yaml
 # Network interface to bind to (or "" to bind to all interfaces).  By default, only
-# respond on the ZeroTier interface.
+# respond on the ZeroTier interface.  On macOS, there are two ZeroTier interfaces
+# whose names start with "feth" and you should specify the one with the lower number
+# (see https://www.zerotier.com/2019/08/21/how-zerotier-eliminated-kernel-extensions-on-macos/ ).
 interface: "zt0"
 
 # Port to listen on.

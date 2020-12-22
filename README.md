@@ -190,7 +190,7 @@ port: 53
 # Base domain.  Could be a top-level domain for internal use only (e.g., zt) or
 # a domain name with one or more subdomains (e.g., internal.yourdomain.com).
 # By default, map members to "<member name>.zt".
-origin: "zt"
+domain: "zt"
 
 # How often to poll the ZeroTier controller in minutes.
 refresh: 30
@@ -208,15 +208,15 @@ api-key: ""
 api-url: "https://my.zerotier.com/api"
 
 # ID of the ZeroTier network.  Only one of "network" and "networks" can be
-# specified.  E.g., if there is a network with ID "123abc" then this would map
-# its members to "<member name>.zt":
+# specified.  E.g., if domain="zt" and there is a network with ID "123abc" then
+# this would map its members to "<member name>.zt":
 #   network: "123abc"
 network:
 
 # Mappings between subdomains and ZeroTier network IDs.  Only one of "network"
 # and "networks" can be specified.
 networks:
-  # E.g., if origin="zt" and there is a network with ID "123abc" then this would
+  # E.g., if domain="zt" and there is a network with ID "123abc" then this would
   # map its members to "<member name>.home.zt":
   #   home: "123abc"
 

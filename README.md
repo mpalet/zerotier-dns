@@ -57,7 +57,13 @@ matthews-mbp.zt.  3600  IN  A 192.168.192.120
 Note that the DNS name is based on the ZeroTier member name (as shown in [ZeroTier Central](https://my.zerotier.com/network)), not the hostname of the member.
 
 In order to resolve names normally, you need to get the server into the DNS lookup chain on all of your machines.
-In practise this means either configuring the system resolver on each machine to use your `zerotier-dns` instance for your chosen domain (see instructions for [Linux](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup) or [macOS](https://learn.hashicorp.com/consul/security-networking/forwarding#macos-setup)), or configuring the DNS server each machine uses to delegate to your `zerotier-dns` instance for your chosen domain (see instructions for [dnsmasq](https://learn.hashicorp.com/consul/security-networking/forwarding#dnsmasq-setup) or [bind](https://learn.hashicorp.com/consul/security-networking/forwarding#bind-setup)).
+As of ZeroTier 1.6, you can configure the ZeroTier controller to push a split DNS configuration to clients when they connect.
+In the "DNS" box in the "Advanced" section in ZeroTier Central, enter the IP address of the server and the domain you have configured.
+ZeroTier Central will not accept top-level domains: "yourdomain.com" is valid but "zt" is not.
+Clients must have the "Allow DNS" box checked in "Network Details".
+Note that on macOS, some command-line troubleshooting tools like `dig` and `nslookup` use their own DNS resolution logic which won't use the split DNS configuration (see [this Stack Exchange answer](https://superuser.com/a/1177211)).
+
+To get the server into the DNS lookup chain for older clients, you can either configure the system resolver on each machine to use your `zerotier-dns` instance for your chosen domain (see instructions for [Linux](https://learn.hashicorp.com/consul/security-networking/forwarding#systemd-resolved-setup) or [macOS](https://learn.hashicorp.com/consul/security-networking/forwarding#macos-setup)), or configure the DNS server each machine uses to delegate to your `zerotier-dns` instance for your chosen domain (see instructions for [dnsmasq](https://learn.hashicorp.com/consul/security-networking/forwarding#dnsmasq-setup) or [bind](https://learn.hashicorp.com/consul/security-networking/forwarding#bind-setup)).
 
 
 

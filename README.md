@@ -41,6 +41,7 @@ docker run --rm \
 where `API_KEY` is a ZeroTier API token and `NETWORK_ID` is a ZeroTier network ID.
 If your ZeroTier network interface is not called `zt0`, then you should add `--interface=<your ZeroTier interface>` (or `--interface=` to listen on all interfaces).
 It is recommended to use a configuration file instead of these command-line arguments (see ["Configuration"](#configuration) section below).
+On a machine with `systemd-resolved`, you may need to use `--network=host` instead of `-p 53:53` to prevent the Docker daemon from fighting over port 53.
 
 Once the server is running you will be able to resolve ZeroTier member names by querying it directly:
 

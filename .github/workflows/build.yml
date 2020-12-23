@@ -34,7 +34,7 @@ jobs:
         curl -fsSL https://get.docker.com | sudo sh
     - name: Log in to registry
       env:
-        USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        USERNAME: mjenz
         PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
         echo ${PASSWORD} | docker login -u ${USERNAME} --password-stdin
@@ -62,13 +62,13 @@ jobs:
           -t $IMAGE \
           .
     - name: Push image
-      if: github.ref == 'refs/heads/master' || github.event_name == 'release'
+      if: (github.ref == 'refs/heads/master' || github.event_name == 'release')
       run: |
         docker push $IMAGE
     - name: Update Docker Hub description
       if: github.ref == 'refs/heads/master'
       uses: peter-evans/dockerhub-description@v2.4.1
       with:
-        username: ${{ secrets.DOCKER_USERNAME }}
+        username: mjenz
         password: ${{ secrets.DOCKER_PASSWORD }}
         repository: mjenz/zerotier-dns

@@ -11,7 +11,6 @@
 name: Check, build
 on:
   push:
-    branches: [master]
   release:
     types: [published]
 
@@ -63,7 +62,7 @@ jobs:
           -t $IMAGE \
           .
     - name: Push image
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/master' || github.event_name == 'release'
       run: |
         docker push $IMAGE
     - name: Update Docker Hub description

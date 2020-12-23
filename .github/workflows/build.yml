@@ -9,7 +9,12 @@
 # faster anyway.
 
 name: Check, build
-on: [push]
+on:
+  push:
+    branches: [master]
+  release:
+    types: [published]
+
 jobs:
   Check:
     runs-on: ubuntu-latest
@@ -43,16 +48,24 @@ jobs:
           -t mjenz/zerotier-dns:builder \
           .
         docker push mjenz/zerotier-dns:builder
+    - name: Construct Docker image name
+      if: github.event_name == 'push'
+      run: |
+        echo "IMAGE=mjenz/zerotier-dns:latest" >> $GITHUB_ENV
+    - name: Construct Docker image name
+      if: github.event_name == 'release'
+      run: |
+        echo "IMAGE=mjenz/zerotier-dns:${{ github.event.release.tag_name }}" >> $GITHUB_ENV
     - name: Build image
       run: |
         DOCKER_BUILDKIT=1 docker build \
           --cache-from mjenz/zerotier-dns:builder \
-          -t mjenz/zerotier-dns:latest \
+          -t $IMAGE \
           .
     - name: Push image
       if: github.ref == 'refs/heads/master'
       run: |
-        docker push mjenz/zerotier-dns:latest
+        docker push $IMAGE
     - name: Update Docker Hub description
       if: github.ref == 'refs/heads/master'
       uses: peter-evans/dockerhub-description@v2.4.1

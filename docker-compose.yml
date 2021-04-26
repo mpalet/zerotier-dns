@@ -1,0 +1,12 @@
+services:
+    zerotier-dns:
+      build: ./docker/zerotier-dns
+      container_name: zerotier-dns
+      ports:
+        -  ${ZEROTIER_IP}:53:53/udp
+      restart: unless-stopped
+      environment:
+        - ZTDNS_API_KEY=${ZTDNS_API_KEY}
+        - ZTDNS_NETWORK=${ZTDNS_NETWORK}
+        - ZTDNS_INTERFACE=eth0
+        - ZTDNS_DOMAIN=${ZTDNS_DOMAIN}

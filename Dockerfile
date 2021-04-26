@@ -16,8 +16,6 @@ RUN CGO_ENABLED=0 GOOS=linux go install -ldflags="-w -s" && \
 	# https://github.com/moby/moby/issues/35699
 	setcap cap_net_bind_service=+ep /go/bin/zerotier-dns
 
-
-
 FROM scratch
 
 # We need ca-certificates for HTTPS, /etc/passwd to log in, and zoneinfo for
@@ -28,6 +26,7 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 WORKDIR /app
 COPY --from=builder /go/bin/zerotier-dns .
+COPY zerotier-dns.example.yml zerotier-dns.yml
 
 USER zerotier-dns
 
